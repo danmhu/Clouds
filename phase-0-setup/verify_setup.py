@@ -37,6 +37,8 @@ REPORT_PATH = REPO_ROOT / "submission" / "phase0_report.json"
 # --------------------------------------------------------------------------- #
 # Functions YOU implement
 # --------------------------------------------------------------------------- #
+
+        
 def parse_gcloud_config(raw: str) -> dict:
     """Parse the JSON emitted by ``gcloud config list --format=json``.
 
@@ -48,10 +50,22 @@ def parse_gcloud_config(raw: str) -> dict:
     Args:
         raw: the raw stdout string from the gcloud command (may be empty).
     """
-    # TODO: parse `raw` as JSON and return {"account": ..., "project": ...}
-    #       from the "core" section. Return empty strings if raw is empty or a
-    #       field is missing.
-    raise NotImplementedError("Phase 0: implement parse_gcloud_config()")
+    if not raw:
+        return {"account": "", "project": ""}
+    
+    try:
+        data = json.loads(raw)
+        core = data.get("core", {})
+        return {
+            "account": core.get("account", ""),
+            "project": core.get("project", "")
+        }
+    except (json.JSONDecodeError, AttributeError):
+        return {"account": "", "project": ""}
+
+    
+
+
 
 
 def parse_repo_slug(remote_url: str) -> str:
@@ -59,17 +73,20 @@ def parse_repo_slug(remote_url: str) -> str:
 
     Must handle both forms git prints:
 
-      * HTTPS: ``https://github.com/eurecom/clouds-lab.git``  -> ``eurecom/clouds-lab``
-      * SSH:   ``git@github.com:eurecom/clouds-lab.git``      -> ``eurecom/clouds-lab``
+- HTTPS: ``https://github.com/eurecom/clouds-lab.git``  -> ``eurecom/clouds-lab``
+- SSH:   ``git@github.com:eurecom/clouds-lab.git``      -> ``eurecom/clouds-lab``
 
     Return ``""`` if the URL is empty or not a github.com URL.
 
     Args:
         remote_url: output of ``git remote get-url origin`` (may be empty).
     """
-    # TODO: return "owner/repo" for both the HTTPS and SSH forms shown above.
-    #       Strip any trailing ".git". Return "" if not a github.com URL.
-    raise NotImplementedError("Phase 0: implement parse_repo_slug()")
+    if not remote_url or "github.com" not in remote_url:
+        return ""
+    
+    url = remote_url.removesuffix(".git")
+    parts = url.split("github.com")
+    return parts[1].lstrip("/:") if len(parts) > 1 else ""
 
 
 # --------------------------------------------------------------------------- #
