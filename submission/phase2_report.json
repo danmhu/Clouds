@@ -1,31 +1,4 @@
-# Phase 2 Reflection
-
-## 1. Headline Numbers
-- Naive attention time: 258.75 ms
-- Vectorized attention time: 1.02 ms
-- Speedup (naive / vectorized): 253.68x
-- 100 steps on CPU: 435700.0 ms
-- 100 steps on T4 GPU: 13769.5 ms
-
-## 2. Thread Sweep
-- 1 thread: 2320.272 ms
-- 2 threads: 2154.852 ms
-- 4 threads: 2761.824 ms
-- 8 threads: 2246.467 ms
-
-## 3. Analysis
-
-### Why vectorization won
-Vectorization replaces Python-level `for` loops across sequence lengths and batch dimensions with optimized C++/CUDA matrix operations (`torch.matmul`), cutting execution time from 258.75 ms to 1.02 ms for a 253.68x speedup.
-
-### Where the thread curve flattened and why
-The thread curve flattened and degraded after 2 threads (2154.852 ms at 2 threads vs. 2761.824 ms at 4 threads). Thread synchronization overhead, context switching, and cache contention outweighed parallel gains on this small tensor size.
-
-### What made the GPU faster and what would not benefit
-The T4 GPU was faster (13769.5 ms vs 435700.0 ms on CPU) due to thousands of parallel CUDA cores performing matrix operations in VRAM. Sequential operations like single-token generation loops or serial Python control flow would not benefit.
-
-### Where does parallelism stop helping, and why?
-Parallelism stopped helping at 4 threads, where execution time increased to 2761.824 ms compared to 2154.852 ms on 2 threads. Amdahl's Law applies here because thread management overhead and non-parallelizable serial bottlenecks outweigh the compute benefit for small workloads.{
+{
   "phase": "2",
   "environment": {
     "colab": true
